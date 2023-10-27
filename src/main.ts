@@ -17,12 +17,20 @@ canvas.width = 500;
 canvas.height = 300;
 container.append(canvas);
 
+let thickness = 2;
+const tinyStroke = 2;
+const largeStroke = 2;
+
+let currentBrush = "thin";
+
 const twoDee = canvas.getContext("2d");
 
 class PenStroke {
   private points: { x: number; y: number }[];
-  constructor(initialPosition: { x: number; y: number }) {
+  private lineWidth: number;
+  constructor(initialPosition: { x: number; y: number }, lineWidth: number) {
     this.points = [initialPosition];
+    this.lineWidth = lineWidth;
   }
 
   drag(x: number, y: number) {
@@ -32,6 +40,7 @@ class PenStroke {
   display(context: CanvasRenderingContext2D) {
     if (this.points.length > 1) {
       context.beginPath();
+      context.lineWidth = this.lineWidth;
       const { x, y } = this.points[0];
       context.moveTo(x, y);
       for (const { x, y } of this.points) {
@@ -55,7 +64,13 @@ canvas.addEventListener("mousedown", (e) => {
   point.x = e.offsetX;
   point.y = e.offsetY;
 
-  currentLine = new PenStroke({ x: point.x, y: point.y });
+  if (currentBrush == "thin") {
+    thickness = tinyStroke;
+  } else {
+    thickness = largeStroke;
+  }
+
+  currentLine = new PenStroke({ x: point.x, y: point.y }, thickness);
   lines.push(currentLine);
   redoLines.length = 0;
   currentLine.drag(point.x, point.y);
@@ -138,4 +153,27 @@ redoButton.addEventListener("click", () => {
       canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
     }
   }
+});
+
+const secondClass = document.createElement("div");
+app.append(secondClass);
+
+const thinToolButton = document.createElement("button");
+thinToolButton.innerHTML = "thin";
+secondClass.append(thinToolButton);
+
+const thickToolButton = document.createElement("button");
+thickToolButton.innerHTML = "thick";
+secondClass.append(thickToolButton);
+
+thinToolButton.addEventListener("click", () => {
+  currentBrush = "thin";
+  thinToolButton.classList.add("selectedTool");
+  thickToolButton.classList.remove("selectedTool");
+});
+
+thickToolButton.addEventListener("click", () => {
+  currentBrush = "thick";
+  thickToolButton.classList.add("selectedTool");
+  thinToolButton.classList.remove("selectedTool");
 });
