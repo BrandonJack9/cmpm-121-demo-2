@@ -19,10 +19,32 @@ container.append(canvas);
 
 const twoDee = canvas.getContext("2d");
 
-const lines: { x: number; y: number }[][] = [];
-const redoLines: { x: number; y: number }[][] = [];
+class PenStroke {
+  private points: { x: number; y: number }[];
+  constructor(initialPosition: { x: number; y: number }) {
+    this.points = [initialPosition];
+  }
 
-let currentLine: { x: number; y: number }[] | null = null;
+  drag(x: number, y: number) {
+    this.points.push({ x, y });
+  }
+
+  display(context: CanvasRenderingContext2D) {
+    if (this.points.length > 1) {
+      context.beginPath();
+      const { x, y } = this.points[0];
+      context.moveTo(x, y);
+      for (const { x, y } of this.points) {
+        context.lineTo(x, y);
+      }
+      context.stroke();
+    }
+  }
+}
+
+const lines: PenStroke[] = [];
+const redoLines: PenStroke[] = [];
+let currentLine: PenStroke | null = null;
 
 const point = { active: false, x: 0, y: 0 };
 
@@ -33,10 +55,10 @@ canvas.addEventListener("mousedown", (e) => {
   point.x = e.offsetX;
   point.y = e.offsetY;
 
-  currentLine = [];
+  currentLine = new PenStroke({ x: point.x, y: point.y });
   lines.push(currentLine);
-  redoLines.splice(0, redoLines.length);
-  currentLine.push({ x: point.x, y: point.y });
+  redoLines.length = 0;
+  currentLine.drag(point.x, point.y);
   redraw();
 
   canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
@@ -46,7 +68,7 @@ canvas.addEventListener("mousemove", (e) => {
   if (point.active && currentLine) {
     point.x = e.offsetX;
     point.y = e.offsetY;
-    currentLine.push({ x: point.x, y: point.y });
+    currentLine.drag(point.x, point.y);
 
     redraw();
 
@@ -67,15 +89,7 @@ function redraw() {
   if (twoDee) {
     twoDee.clearRect(0, 0, canvas.width, canvas.height);
     for (const line of lines) {
-      if (line.length > 1) {
-        twoDee.beginPath();
-        const { x, y } = line[0];
-        twoDee.moveTo(x, y);
-        for (const { x, y } of line) {
-          twoDee.lineTo(x, y);
-        }
-        twoDee.stroke();
-      }
+      line.display(twoDee);
     }
   }
 }
@@ -88,7 +102,7 @@ clearButton.innerHTML = "Clear";
 container.append(clearButton);
 
 clearButton.addEventListener("click", () => {
-  lines.splice(0, lines.length);
+  lines.length = 0;
   redraw();
 
   canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
@@ -124,8 +138,4 @@ redoButton.addEventListener("click", () => {
       canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
     }
   }
-});
-
-canvasEventTarget.addEventListener("drawing-changed", () => {
-  redraw();
 });
