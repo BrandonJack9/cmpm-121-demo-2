@@ -9,6 +9,8 @@ const one = 1;
 const zero = 0;
 const eight = 8;
 const sixteen = 16;
+const canvasHeight = 400;
+const canvasWidth = 600;
 
 const container0 = document.createElement("div");
 app.append(container0);
@@ -20,8 +22,8 @@ const header = document.createElement("h1");
 header.innerHTML = gameName;
 container0.append(header);
 const canvas = document.createElement("canvas");
-canvas.width = 500;
-canvas.height = 300;
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
 canvas.style.cursor = "none";
 container0.append(canvas);
 
@@ -358,3 +360,38 @@ customStickerButton.innerHTML = "Create Custom Sticker (double click to place)";
 container4.append(customStickerButton);
 
 customStickerButton.addEventListener("click", createCustomSticker);
+
+function exportCanvas() {
+  const exportCanvas = document.createElement("canvas");
+  const scaleFactor = 4;
+  exportCanvas.width = canvasWidth * scaleFactor;
+  exportCanvas.height = canvasHeight * scaleFactor;
+  const exportCtx = exportCanvas.getContext("2d");
+
+  if (exportCtx) {
+    exportCtx.fillStyle = "white";
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    exportCtx.scale(scaleFactor, scaleFactor);
+  }
+
+  lines.forEach((item) => {
+    if (item instanceof StickerCommand || item instanceof PenStroke) {
+      if (exportCtx) {
+        item.display(exportCtx);
+      }
+    }
+  });
+
+  const exportDataUrl = exportCanvas.toDataURL("image/png");
+
+  const a = document.createElement("a");
+  a.href = exportDataUrl;
+  a.download = "exported_canvas.png";
+  a.click();
+}
+
+const exportButton = document.createElement("button");
+exportButton.innerHTML = "Export";
+secondClass.append(exportButton);
+
+exportButton.addEventListener("click", exportCanvas);
