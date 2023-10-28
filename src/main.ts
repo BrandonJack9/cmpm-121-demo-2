@@ -10,17 +10,20 @@ const zero = 0;
 const eight = 8;
 const sixteen = 16;
 
+const container0 = document.createElement("div");
+app.append(container0);
+
 const container = document.createElement("div");
-app.append(container);
+app.append(container0);
 
 const header = document.createElement("h1");
 header.innerHTML = gameName;
-container.append(header);
+container0.append(header);
 const canvas = document.createElement("canvas");
 canvas.width = 500;
 canvas.height = 300;
 canvas.style.cursor = "none";
-container.append(canvas);
+container0.append(canvas);
 
 let thickness = 2;
 const tinyStroke = 2;
@@ -97,11 +100,9 @@ class CursorCommand {
         twoDee.fillText(this.s, this.x - eight, this.y + sixteen);
       } else {
         if (thickness == largeStroke) {
-          // Use a larger font size for the asterisk when using the "thick" tool
-          twoDee.font = "30px monospace"; // Adjust the size as needed
+          twoDee.font = "30px monospace";
         } else {
-          // Use a smaller font size for the asterisk when using the "thin" tool
-          twoDee.font = "10px monospace"; // Adjust the size as needed
+          twoDee.font = "10px monospace";
         }
         twoDee.fillText("x", this.x - eight, this.y + sixteen);
       }
@@ -144,8 +145,6 @@ canvas.addEventListener("mouseout", () => {
   notify("tool-changed");
 });
 
-//const points = { active: false, x: 0, y: 0 };
-
 const canvasEventTarget = new EventTarget();
 
 canvas.addEventListener("mouseenter", (e) => {
@@ -169,18 +168,23 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  if (cursorCommand?.s) {
-    currentSticker = new StickerCommand(e.offsetX, e.offsetY, cursorCommand.s);
-  } else {
-    //cursorCommand = null; //remove when draw
-    if (currentBrush === "thin") {
-      thickness = tinyStroke;
+  if (cursorCommand) {
+    if (cursorCommand.s) {
+      currentSticker = new StickerCommand(
+        e.offsetX,
+        e.offsetY,
+        cursorCommand.s
+      );
     } else {
-      thickness = largeStroke;
+      if (currentBrush == "thin") {
+        thickness = tinyStroke;
+      } else {
+        thickness = largeStroke;
+      }
+      currentLine = new PenStroke({ x: e.offsetX, y: e.offsetY }, thickness);
     }
-    currentLine = new PenStroke({ x: e.offsetX, y: e.offsetY }, thickness);
   }
-  lines.push(currentSticker ?? currentLine); // Use the current sticker if avai
+  lines.push(currentSticker ?? currentLine);
   redoLines.length = 0;
   notify("drawing-changed");
 });
@@ -284,17 +288,14 @@ thickToolButton.addEventListener("click", () => {
 const container3 = document.createElement("div");
 app.append(container3);
 
-// container 2 so buttons are below other buttons
 const stickers = ["🎃", "😈", "👻", "👿", "☠️", "👺"];
 for (const sticker of stickers) {
   const stickerButton = document.createElement("button");
   stickerButton.className = "sticker-button";
   stickerButton.type = "button";
-  stickerButton.innerHTML = sticker; // Display the sticker as the button label
+  stickerButton.innerHTML = sticker;
 
-  // Event listener for each button
   stickerButton.addEventListener("click", (e) => {
-    // Implement the command pattern for sticker placement
     const stickerCommand = new StickerCommand(e.offsetX, e.offsetY, sticker);
     currentSticker = stickerCommand;
     if (twoDee) {
@@ -304,6 +305,56 @@ for (const sticker of stickers) {
     notify("drawing-changed");
   });
 
-  // Append the button to the container
   container3.append(stickerButton);
 }
+
+let placingCustomSticker = false;
+let customStickerContent = "";
+
+function createCustomSticker() {
+  if (placingCustomSticker) {
+    return;
+  }
+
+  const inputContent = prompt("Enter your custom sticker here:");
+
+  if (inputContent !== null) {
+    customStickerContent = inputContent;
+
+    placingCustomSticker = true;
+    canvas.style.cursor = "crosshair";
+
+    canvas.addEventListener("mousemove", stickerPlacementHandler);
+
+    alert("Click on the canvas to place the custom sticker.");
+  }
+}
+
+function stickerPlacementHandler(e: MouseEvent) {
+  if (placingCustomSticker) {
+    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, "");
+    redraw();
+
+    if (e.buttons == one) {
+      const x = e.offsetX;
+      const y = e.offsetY;
+      const stickerContent = customStickerContent;
+      const stickerCommand = new StickerCommand(x, y, stickerContent);
+      lines.push(stickerCommand);
+      notify("drawing-changed");
+      redraw();
+      placingCustomSticker = false;
+      canvas.style.cursor = "none";
+      canvas.removeEventListener("mousemove", stickerPlacementHandler);
+    }
+  }
+}
+
+const container4 = document.createElement("div");
+app.append(container4);
+
+const customStickerButton = document.createElement("button");
+customStickerButton.innerHTML = "Create Custom Sticker (double click to place)";
+container4.append(customStickerButton);
+
+customStickerButton.addEventListener("click", createCustomSticker);
