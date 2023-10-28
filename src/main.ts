@@ -15,8 +15,8 @@ const canvasWidth = 600;
 const container0 = document.createElement("div");
 app.append(container0);
 
-const container = document.createElement("div");
-app.append(container0);
+//const container = document.createElement("div");
+//app.append(container0);
 
 const header = document.createElement("h1");
 header.innerHTML = gameName;
