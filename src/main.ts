@@ -217,7 +217,7 @@ document.body.append(document.createElement("br"));
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
 
-container.append(clearButton);
+container0.append(clearButton);
 
 clearButton.addEventListener("click", () => {
   lines.length = 0;
@@ -227,7 +227,7 @@ clearButton.addEventListener("click", () => {
 
 const undoButton = document.createElement("button");
 undoButton.innerHTML = "undo";
-container.append(undoButton);
+container0.append(undoButton);
 
 undoButton.addEventListener("click", () => {
   if (lines.length > zero) {
@@ -242,7 +242,7 @@ undoButton.addEventListener("click", () => {
 
 const redoButton = document.createElement("button");
 redoButton.innerHTML = "redo";
-container.append(redoButton);
+container0.append(redoButton);
 
 redoButton.addEventListener("click", () => {
   if (redoLines.length > zero) {
