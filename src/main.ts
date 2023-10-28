@@ -54,22 +54,66 @@ bus.addEventListener("tool-changed", () => {
   redraw();
 });
 
+const colorPicker = document.createElement("input");
+colorPicker.type = "color";
+colorPicker.value = "#000000"; // Set the default color
+container0.appendChild(colorPicker);
+
+colorPicker.addEventListener("input", (e: Event) => {
+  if (e.target instanceof HTMLInputElement) {
+    const selectedColor = e.target.value;
+    updateLineColor(selectedColor);
+  }
+});
+
+function updateLineColor(color: string) {
+  if (currentBrush == "thin" && currentLine instanceof PenStroke) {
+    currentLine.setLineColor(color);
+  } else if (currentBrush == "thick" && currentLine instanceof PenStroke) {
+    currentLine.setLineColor(color);
+  }
+}
+
+let selectedColor = "#000000";
+
+colorPicker.addEventListener("input", (e: Event) => {
+  if (e.target instanceof HTMLInputElement) {
+    selectedColor = e.target.value;
+  }
+});
+
 class PenStroke {
   private points: { x: number; y: number }[];
   private lineWidth: number;
-  constructor(initialPosition: { x: number; y: number }, lineWidth: number) {
+  private lineColor: string;
+  private originalColor: string;
+  constructor(
+    initialPosition: { x: number; y: number },
+    lineWidth: number,
+    lineColor: string
+  ) {
     this.points = [initialPosition];
     this.lineWidth = lineWidth;
+    this.lineColor = lineColor;
+    this.originalColor = lineColor;
   }
 
   drag(x: number, y: number) {
     this.points.push({ x, y });
   }
 
+  setLineColor(color: string) {
+    this.lineColor = color;
+  }
+
+  resetToOriginalColor() {
+    this.lineColor = this.originalColor;
+  }
+
   display(twoDee: CanvasRenderingContext2D) {
     if (this.points.length > one) {
       if (twoDee) {
-        twoDee.strokeStyle = "black";
+        twoDee.strokeStyle = this.lineColor;
         twoDee.lineWidth = this.lineWidth;
         twoDee.beginPath();
         const { x, y } = this.points[zero];
@@ -138,7 +182,8 @@ class StickerCommand {
 
 let currentLine: PenStroke | StickerCommand = new PenStroke(
   { x: zero, y: zero },
-  zero
+  zero,
+  ""
 );
 
 canvas.addEventListener("mouseout", () => {
@@ -183,7 +228,11 @@ canvas.addEventListener("mousedown", (e) => {
       } else {
         thickness = largeStroke;
       }
-      currentLine = new PenStroke({ x: e.offsetX, y: e.offsetY }, thickness);
+      currentLine = new PenStroke(
+        { x: e.offsetX, y: e.offsetY },
+        thickness,
+        selectedColor
+      );
     }
   }
   lines.push(currentSticker ?? currentLine);
@@ -202,7 +251,14 @@ canvas.addEventListener("mouseup", () => {
 function redraw() {
   if (twoDee) {
     twoDee.clearRect(zero, zero, canvas.width, canvas.height);
-    lines.forEach((line) => line.display(twoDee));
+    lines.forEach((line) => {
+      if (line instanceof PenStroke) {
+        line.resetToOriginalColor();
+        line.display(twoDee);
+      } else {
+        line.display(twoDee);
+      }
+    });
     if (cursorCommand) {
       cursorCommand.execute(twoDee);
     }
