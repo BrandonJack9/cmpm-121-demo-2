@@ -5,6 +5,10 @@ const app: HTMLDivElement = document.querySelector("#app")!;
 const gameName = "ShadowHand's Game";
 
 document.title = gameName;
+const one = 1;
+const zero = 0;
+const eight = 8;
+const sixteen = 16;
 
 const container = document.createElement("div");
 app.append(container);
@@ -58,12 +62,12 @@ class PenStroke {
   }
 
   display(twoDee: CanvasRenderingContext2D) {
-    if (this.points.length > 1) {
+    if (this.points.length > one) {
       if (twoDee) {
         twoDee.strokeStyle = "black";
         twoDee.lineWidth = this.lineWidth;
         twoDee.beginPath();
-        const { x, y } = this.points[0];
+        const { x, y } = this.points[zero];
         twoDee.moveTo(x, y);
         for (const { x, y } of this.points) {
           twoDee.lineTo(x, y);
@@ -87,10 +91,10 @@ class CursorCommand {
   }
   execute(twoDee: CanvasRenderingContext2D) {
     if (twoDee) {
-      twoDee.fillText("x", this.x - 8, this.y + 16);
+      twoDee.fillText("x", this.x - eight, this.y + sixteen);
       if (this.s) {
         twoDee.font = "10px monospace";
-        twoDee.fillText(this.s, this.x - 8, this.y + 16);
+        twoDee.fillText(this.s, this.x - eight, this.y + sixteen);
       } else {
         if (thickness == largeStroke) {
           // Use a larger font size for the asterisk when using the "thick" tool
@@ -99,7 +103,7 @@ class CursorCommand {
           // Use a smaller font size for the asterisk when using the "thin" tool
           twoDee.font = "10px monospace"; // Adjust the size as needed
         }
-        twoDee.fillText("x", this.x - 8, this.y + 16);
+        twoDee.fillText("x", this.x - eight, this.y + sixteen);
       }
     }
   }
@@ -129,7 +133,10 @@ class StickerCommand {
   }
 }
 
-let currentLine: PenStroke | StickerCommand = new PenStroke({ x: 0, y: 0 }, 0);
+let currentLine: PenStroke | StickerCommand = new PenStroke(
+  { x: zero, y: zero },
+  zero
+);
 
 canvas.addEventListener("mouseout", () => {
   cursorCommand = null;
@@ -153,7 +160,7 @@ canvas.addEventListener("mousemove", (e) => {
   }
   notify("tool-changed");
 
-  if (e.buttons == 1 && currentLine) {
+  if (e.buttons == one && currentLine) {
     cursorCommand = null;
     currentLine.drag(e.offsetX, e.offsetY);
     redraw();
@@ -162,7 +169,7 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  if (cursorCommand && cursorCommand.s) {
+  if (cursorCommand?.s) {
     currentSticker = new StickerCommand(e.offsetX, e.offsetY, cursorCommand.s);
   } else {
     //cursorCommand = null; //remove when draw
@@ -173,7 +180,7 @@ canvas.addEventListener("mousedown", (e) => {
     }
     currentLine = new PenStroke({ x: e.offsetX, y: e.offsetY }, thickness);
   }
-  lines.push(currentSticker || currentLine); // Use the current sticker if avai
+  lines.push(currentSticker ?? currentLine); // Use the current sticker if avai
   redoLines.length = 0;
   notify("drawing-changed");
 });
@@ -188,7 +195,7 @@ canvas.addEventListener("mouseup", () => {
 
 function redraw() {
   if (twoDee) {
-    twoDee.clearRect(0, 0, canvas.width, canvas.height);
+    twoDee.clearRect(zero, zero, canvas.width, canvas.height);
     lines.forEach((line) => line.display(twoDee));
     if (cursorCommand) {
       cursorCommand.execute(twoDee);
@@ -217,7 +224,7 @@ undoButton.innerHTML = "undo";
 container.append(undoButton);
 
 undoButton.addEventListener("click", () => {
-  if (lines.length > 0) {
+  if (lines.length > zero) {
     const poppedLine = lines.pop();
     if (poppedLine) {
       redoLines.push(poppedLine);
@@ -232,7 +239,7 @@ redoButton.innerHTML = "redo";
 container.append(redoButton);
 
 redoButton.addEventListener("click", () => {
-  if (redoLines.length > 0) {
+  if (redoLines.length > zero) {
     const poppedRedoLine = redoLines.pop();
     if (poppedRedoLine) {
       lines.push(poppedRedoLine);
